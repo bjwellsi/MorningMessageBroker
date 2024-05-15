@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "@sendgrid/mail": "^8.1.1",
+    "express": "^4.19.2",
+    "nodemailer": "^6.9.13",
+    "osa-imessage": "^2.4.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "name": "morning_message_broker",
+  "version": "1.0.0",
+  "description": "Distributes and updates the morning messages",
+  "main": "MorningMessageBroker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bjwellsi",
+  "license": "ISC"
+}
