@@ -1,6 +1,7 @@
 const fs = require("fs").promises;
 const mailer = require("./SendGridEmail.js");
 const express = require("express");
+const msg_repo = require("./MessageRepo.js");
 
 function initiateServer() {
   fs.readFile("./storage/ServerParams.json")
@@ -25,7 +26,8 @@ function initiateServer() {
       });
 
       app.get("/send", (req, res) => {
-        getNextMessage()
+        msg_repo
+          .getNextRandomMessage()
           .then((message) => {
             return mailer.sendEmail(
               message.destination,
@@ -44,7 +46,8 @@ function initiateServer() {
 
       app.post("/message", (req, res) => {
         console.log(req);
-        insertMessage(req.body)
+        msg_repo
+          .insertMessage(req.body)
           .then((data) => {
             res.send(data + "\n");
           })
@@ -59,44 +62,6 @@ function initiateServer() {
     })
     .catch((err) => {
       console.log(err);
-    });
-}
-
-function getNextMessage() {
-  return fs
-    .readFile("./storage/NextMessage.json")
-    .then((data) => {
-      return JSON.parse(data);
-    })
-    .then((message) => {
-      return message;
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-}
-
-function insertMessage(message) {
-  //basically validate the json
-  //obviously not a pretty way to do it
-  console.log(message);
-  if (typeof message.destination != "string" || message.destination === "")
-    throw new Error("Invalid Destination");
-
-  if (typeof message.subject != "string" || message.subject === "")
-    throw new Error("Invalid Subject");
-
-  if (typeof message.data != "string" || message.data === "")
-    throw new Error("Invalid Data");
-
-  //assuming no errors, update the message
-  return fs
-    .writeFile("./storage/NextMessage.json", JSON.stringify(message))
-    .then(() => {
-      return "Wrote new message";
-    })
-    .catch((err) => {
-      throw err;
     });
 }
 
