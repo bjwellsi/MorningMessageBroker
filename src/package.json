@@ -1,11 +1,13 @@
 {
   "dependencies": {
     "@sendgrid/mail": "^8.1.1",
-    "express": "^4.19.2",
-    "nodemailer": "^6.9.13",
-    "osa-imessage": "^2.4.2"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.3.0",
+    "eslint": "^9.3.0",
+    "globals": "^15.2.0",
     "nodemon": "^3.1.0"
   },
   "name": "morning_message_broker",
@@ -13,6 +15,7 @@
   "description": "Distributes and updates the morning messages",
   "main": "MorningMessageBroker.js",
   "scripts": {
+    "start": "nodemon --env-file=.env app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Bjwellsi",
