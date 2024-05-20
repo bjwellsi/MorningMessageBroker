@@ -12,5 +12,5 @@ USER node
 
 EXPOSE 8080 
 
-CMD [ "node", "MorningMessageBroker.js" ]
+CMD [ "node", "App.js" ]
 
