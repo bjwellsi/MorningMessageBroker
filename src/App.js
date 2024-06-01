@@ -39,6 +39,9 @@ function initiateServer() {
       app.get("/send", (req, res) => {
         msg_repo
           .getNextRandomMessage()
+          .then((out) => {
+            return out;
+          })
           .then((message) => {
             return mailer.sendEmail(
               message.destination,
@@ -51,7 +54,7 @@ function initiateServer() {
           })
           .catch((err) => {
             res.status(400).send("Failed to send\n");
-            console.log(err);
+            throw err;
           });
       });
 
