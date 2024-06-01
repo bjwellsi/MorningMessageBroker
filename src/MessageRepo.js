@@ -1,30 +1,31 @@
 const fs = require("fs").promises;
 const MongoClient = require("mongodb").MongoClient;
 
+function mongoConnection(collection) {
+  var url = "mongodb://localhost:27017/morning_message_broker";
+  return MongoClient.connect(url).then((client) => {
+    return client.db().collection(collection);
+  });
+}
+
 function getMessageList() {
   //currently just going to return all
   //should obviously be a bit more specific in the future, w/user for ex
-  var url = "mongodb://localhost:27017/morning_message_broker";
-
-  return MongoClient.connect(url)
-    .then((client) => {
-      return client.db();
-    })
-    .then((db) => {
-      return db
-        .collection("messages")
-        .find()
-        .toArray()
-        .then((array) => {
-          return array;
-        });
-    })
-    .catch((err) => {
-      throw err;
-    });
+  return mongoConnection("messages").then((collection) => {
+    return collection
+      .find()
+      .toArray()
+      .then((array) => {
+        return array;
+      })
+      .catch((err) => {
+        throw err;
+      });
+  });
 }
 
 function getNextRandomMessage() {
+  //should probably refactor this to call mongo directly instead of randomly grabbing the whole collection
   return getMessageList().then((messages) => {
     const len = messages.length;
     const rand_index = Math.round(Math.random() * (len - 1));
@@ -34,20 +35,12 @@ function getNextRandomMessage() {
 
 function getMessageByType(type) {
   //returns first message of a given type
-  var url = "mongodb://localhost:27017/morning_message_broker";
-
   var query = { type: type };
-  return MongoClient.connect(url)
-    .then((client) => {
-      return client.db();
-    })
-    .then((db) => {
-      return db
-        .collection("messages")
-        .findOne(query)
-        .then((val) => {
-          return val;
-        });
+  return mongoConnection("messages")
+    .then((collection) => {
+      return collection.findOne(query).then((val) => {
+        return val;
+      });
     })
     .catch((err) => {
       throw err;
@@ -66,19 +59,11 @@ function insertMessage(message) {
   if (typeof message.data != "string" || message.data === "")
     throw new Error("Invalid Data");
 
-  var url = "mongodb://localhost:27017/morning_message_broker";
-
-  return MongoClient.connect(url)
-    .then((client) => {
-      return client.db();
-    })
-    .then((db) => {
-      return db
-        .collection("messages")
-        .insertOne(message)
-        .then((res) => {
-          return res;
-        });
+  return mongoConnection("messages")
+    .then((collection) => {
+      return collection.insertOne(message).then((res) => {
+        return res;
+      });
     })
     .catch((err) => {
       throw err;
