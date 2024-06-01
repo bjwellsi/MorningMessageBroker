@@ -1,3 +1,5 @@
+const { Collection } = require("mongodb");
+
 const fs = require("fs").promises;
 const MongoClient = require("mongodb").MongoClient;
 
@@ -31,6 +33,32 @@ function getNextRandomMessage() {
     const rand_index = Math.round(Math.random() * (len - 1));
     return messages[rand_index];
   });
+}
+
+function getMessageTypes() {
+  return mongoConnection("messages").then((collection) => {
+    return collection.distinct("type", {}).then((array) => {
+      console.log(array);
+      return array;
+    });
+  });
+}
+
+function getMessagesByType(type) {
+  //returns first message of a given type
+  var query = { type: type };
+  return mongoConnection("messages")
+    .then((collection) => {
+      return collection
+        .find(query)
+        .toArray()
+        .then((messages) => {
+          return messages;
+        });
+    })
+    .catch((err) => {
+      throw err;
+    });
 }
 
 function getMessageByType(type) {
@@ -70,4 +98,12 @@ function insertMessage(message) {
     });
 }
 
-module.exports = { insertMessage, getMessageByType, getNextRandomMessage };
+module.exports = {
+  mongoConnection,
+  insertMessage,
+  getMessageByType,
+  getNextRandomMessage,
+  getMessageList,
+  getMessagesByType,
+  getMessageTypes,
+};

@@ -58,6 +58,43 @@ function initiateServer() {
           });
       });
 
+      app.get("/messages", (req, res) => {
+        let type = req.query.type;
+        if (type == null) {
+          msg_repo
+            .getMessageList()
+            .then((messages) => {
+              res.status(200).send(messages);
+            })
+            .catch((err) => {
+              res.status(400).send("Unknown err");
+              throw err;
+            });
+        } else {
+          msg_repo
+            .getMessagesByType(type)
+            .then((messages) => {
+              res.status(200).send(messages);
+            })
+            .catch((err) => {
+              res.status(400).send("Unknown err");
+              throw err;
+            });
+        }
+      });
+
+      app.get("/messageTypes", (req, res) => {
+        msg_repo
+          .getMessageTypes()
+          .then((types) => {
+            res.status(200).send({ types });
+          })
+          .catch((err) => {
+            res.status(400).send("Unknown err");
+            throw err;
+          });
+      });
+
       app.post("/message", (req, res) => {
         msg_repo
           .insertMessage(req.body)
