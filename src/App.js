@@ -37,23 +37,57 @@ function initiateServer() {
       });
 
       app.get("/send", (req, res) => {
+        //for now the defined behavior is going to be
+        //if id provided, ignore the type
+        //if neither provided, default to totally random message
+        const id = req.query.id;
+        const type = req.query.type;
+        if (id != null) {
+          msg_repo
+            .getMessageByID(id)
+            .then((message) => {
+              return mailer.sendEmail(
+                message.destination,
+                message.subject,
+                message.data,
+              );
+            })
+            .then(() => {
+              res.status(200).send("Message sent\n");
+            })
+            .catch((err) => {
+              res.status(400).send("Couldn't find the message\n");
+              throw err;
+            });
+        } else {
+          msg_repo
+            .getNextRandomMessage(type) //this function will handle the null mapping of type for us
+            .then((message) => {
+              return mailer.sendEmail(
+                message.destination,
+                message.subject,
+                message.data,
+              );
+            })
+            .then(() => {
+              res.status(200).send("Message Sent\n");
+            })
+            .catch((err) => {
+              res.status(400).send("Failed to send\n");
+              throw err;
+            });
+        }
+      });
+
+      app.get("/message", (req, res) => {
+        let id = req.query.id;
         msg_repo
-          .getNextRandomMessage()
-          .then((out) => {
-            return out;
-          })
+          .getMessageByID(id)
           .then((message) => {
-            return mailer.sendEmail(
-              message.destination,
-              message.subject,
-              message.data,
-            );
-          })
-          .then(() => {
-            res.status(200).send("Message Sent\n");
+            res.status(200).send(message);
           })
           .catch((err) => {
-            res.status(400).send("Failed to send\n");
+            res.status(400).send("Couldn't find message");
             throw err;
           });
       });
@@ -103,6 +137,19 @@ function initiateServer() {
           })
           .catch((err) => {
             res.status(400).send(err + "\n");
+          });
+      });
+
+      app.delete("/message", (req, res) => {
+        const id = req.query.id;
+        msg_repo
+          .deleteMessageByID(id)
+          .then((result) => {
+            res.status(200).send("Deleted\n");
+          })
+          .catch((err) => {
+            res.status(400).send("Failed to delete\n");
+            throw err;
           });
       });
 

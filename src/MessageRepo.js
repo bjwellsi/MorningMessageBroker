@@ -1,7 +1,6 @@
-const { Collection } = require("mongodb");
-
 const fs = require("fs").promises;
 const MongoClient = require("mongodb").MongoClient;
+const MongoObjectID = require("mongodb").ObjectId;
 
 function mongoConnection(collection) {
   var url = "mongodb://localhost:27017/morning_message_broker";
@@ -26,13 +25,21 @@ function getMessageList() {
   });
 }
 
-function getNextRandomMessage() {
+function getNextRandomMessage(type) {
   //should probably refactor this to call mongo directly instead of randomly grabbing the whole collection
-  return getMessageList().then((messages) => {
-    const len = messages.length;
-    const rand_index = Math.round(Math.random() * (len - 1));
-    return messages[rand_index];
-  });
+  if (type != null) {
+    return getMessagesByType(type).then((messages) => {
+      const len = messages.length;
+      const rand_index = Math.round(Math.random() * (len - 1));
+      return messages[rand_index];
+    });
+  } else {
+    return getMessageList().then((messages) => {
+      const len = messages.length;
+      const rand_index = Math.round(Math.random() * (len - 1));
+      return messages[rand_index];
+    });
+  }
 }
 
 function getMessageTypes() {
@@ -75,6 +82,20 @@ function getMessageByType(type) {
     });
 }
 
+function getMessageByID(id) {
+  oid = MongoObjectID.createFromHexString(id);
+  var query = { _id: oid };
+  return mongoConnection("messages")
+    .then((collection) => {
+      return collection.findOne(query).then((message) => {
+        return message;
+      });
+    })
+    .catch((err) => {
+      throw err;
+    });
+}
+
 function insertMessage(message) {
   //basically validate the json
   //obviously not a pretty way to do it
@@ -98,6 +119,20 @@ function insertMessage(message) {
     });
 }
 
+function deleteMessageByID(id) {
+  const oid = MongoObjectID.createFromHexString(id);
+  const query = { _id: oid };
+  return mongoConnection("messages")
+    .then((collection) => {
+      return collection.deleteOne(query).then((res) => {
+        return res;
+      });
+    })
+    .catch((err) => {
+      throw err;
+    });
+}
+
 module.exports = {
   mongoConnection,
   insertMessage,
@@ -106,4 +141,6 @@ module.exports = {
   getMessageList,
   getMessagesByType,
   getMessageTypes,
+  getMessageByID,
+  deleteMessageByID,
 };
