@@ -4,7 +4,7 @@ const express = require("express");
 const morgan = require("morgan");
 const rfs = require("rotating-file-stream");
 const messageRoutes = require("./routes/MessageRoutes.js");
-const logging = require("./logging.js");
+const logging = require("./services/logging.js");
 
 async function initiateServer() {
   try {
