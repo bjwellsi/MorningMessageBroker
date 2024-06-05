@@ -1,122 +1,115 @@
 const express = require("express");
 const mailer = require("../SendGridEmail.js");
 const msg_repo = require("../MessageRepo.js");
+const logging = require("../logging.js");
 
 const router = express.Router();
 
-router.get("/send", (req, res) => {
+router.get("/send", async (req, res) => {
   //for now the defined behavior is going to be
   //if id provided, ignore the type
   //if neither provided, default to totally random message
   const id = req.query.id;
   const type = req.query.type;
   if (id != null) {
-    msg_repo
-      .getMessageByID(id)
-      .then((message) => {
-        return mailer.sendEmail(
-          message.destination,
-          message.subject,
-          message.data,
-        );
-      })
-      .then(() => {
-        res.status(200).send("Message sent\n");
-      })
-      .catch((err) => {
-        res.status(400).send("Couldn't find the message\n");
-        throw err;
-      });
+    try {
+      let message = await msg_repo.getMessageByID(id);
+      let mailSent = await mailer.sendEmail(
+        message.destination,
+        message.subject,
+        message.data,
+      );
+      res.status(200).send("Message sent\n");
+    } catch (err) {
+      res.status(400).send("Couldn't find the message\n");
+      logging.log_error(err);
+    }
   } else {
-    msg_repo
-      .getNextRandomMessage(type) //this function will handle the null mapping of type for us
-      .then((message) => {
-        return mailer.sendEmail(
-          message.destination,
-          message.subject,
-          message.data,
-        );
-      })
-      .then(() => {
-        res.status(200).send("Message Sent\n");
-      })
-      .catch((err) => {
-        res.status(400).send("Failed to send\n");
-        throw err;
-      });
+    try {
+      let message = await msg_repo.getNextRandomMessage(type); //this function will handle the null mapping of type for us
+      let mailSent = await mailer.sendEmail(
+        message.destination,
+        message.subject,
+        message.data,
+      );
+      res.status(200).send("Message Sent\n");
+    } catch (err) {
+      res.status(400).send("Failed to send\n");
+      logging.log_error(err);
+    }
   }
 });
 
-router.get("/types", (req, res) => {
-  msg_repo
-    .getMessageTypes()
-    .then((types) => {
-      res.status(200).send({ types });
-    })
-    .catch((err) => {
-      res.status(400).send("Unknown err");
-      throw err;
-    });
+router.get("/types", async (req, res) => {
+  try {
+    let types = await msg_repo.getMessageTypes();
+    res.status(200).send({ types });
+  } catch (err) {
+    res.status(400).send("Unknown err");
+    logging.log_error(err);
+  }
 });
 
-router.get("", (req, res) => {
+router.get("/random", async (req, res) => {
+  const type = req.query.type;
+  try {
+    //this function currently handles empty types for us
+    let message = await msg_repo.getNextRandomMessage(type);
+    res.status(200).send(message);
+  } catch (err) {
+    res.status(400).send("Couldn't find message");
+    logging.log_error(err);
+  }
+});
+
+router.get("", async (req, res) => {
   const type = req.query.type;
   const id = req.query.id;
   if (id != null) {
-    msg_repo
-      .getMessageByID(id)
-      .then((message) => {
-        res.status(200).send(message);
-      })
-      .catch((err) => {
-        res.status(400).send("Couldn't find message");
-        throw err;
-      });
+    try {
+      let message = await msg_repo.getMessageByID(id);
+      res.status(200).send(message);
+    } catch (err) {
+      res.status(400).send("Couldn't find message");
+      logging.log_error(err);
+    }
   } else if (type == null) {
-    msg_repo
-      .getMessageList()
-      .then((messages) => {
-        res.status(200).send(messages);
-      })
-      .catch((err) => {
-        res.status(400).send("Unknown err");
-        throw err;
-      });
+    try {
+      let message = await msg_repo.getMessageList();
+      res.status(200).send(message);
+    } catch (err) {
+      res.status(400).send("Couldn't find messages");
+      logging.log_error(err);
+    }
   } else {
-    msg_repo
-      .getMessagesByType(type)
-      .then((messages) => {
-        res.status(200).send(messages);
-      })
-      .catch((err) => {
-        res.status(400).send("Unknown err");
-        throw err;
-      });
+    try {
+      let message = await msg_repo.getMessagesByType(type);
+      res.status(200).send(message);
+    } catch (err) {
+      res.status(400).send("Couldn't find messages");
+      logging.log_error(err);
+    }
   }
 });
 
-router.post("", (req, res) => {
-  msg_repo
-    .insertMessage(req.body)
-    .then((data) => {
-      res.status(200).send(data + "\n");
-    })
-    .catch((err) => {
-      res.status(400).send(err + "\n");
-    });
+router.post("", async (req, res) => {
+  try {
+    let messageData = await msg_repo.insertMessage(req.body);
+    res.status(200).send(messageData + "\n");
+  } catch (err) {
+    res.status(400).send(err + "\n");
+  }
 });
 
-router.delete("", (req, res) => {
+router.delete("", async (req, res) => {
   const id = req.query.id;
-  msg_repo
-    .deleteMessageByID(id)
-    .then((result) => {
-      res.status(200).send("Deleted\n");
-    })
-    .catch((err) => {
-      res.status(400).send("Failed to delete\n");
-      throw err;
-    });
+  try {
+    let result = await msg_repo.deleteMessageByID(id);
+    res.status(200).send("Deleted\n");
+  } catch (err) {
+    res.status(400).send("Failed to delete\n");
+    logging.log_error(err);
+  }
 });
 
 module.exports = router;
