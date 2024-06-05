@@ -1,5 +1,5 @@
 const mailer = require("../services/SendGridEmail.js");
-const msg_repo = require("../services/MessageRepo.js");
+const msg_repo = require("../services/repositories/MessageRepo.js");
 const logging = require("../services/logging.js");
 
 async function sendMessage(req, res) {
