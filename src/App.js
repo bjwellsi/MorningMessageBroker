@@ -3,8 +3,10 @@ const path = require("path");
 const express = require("express");
 const morgan = require("morgan");
 const rfs = require("rotating-file-stream");
-const messageRoutes = require("./routes/MessageRoutes.js");
+const message_routes = require("./routes/MessageRoutes.js");
+const user_routes = require("./routes/UserRoutes.js");
 const logging = require("./services/logging.js");
+const scheduler = require("./services/scheduler.js");
 
 async function initiateServer() {
   try {
@@ -34,7 +36,8 @@ async function initiateServer() {
       res.status(200).send("Welcome!\n");
     });
 
-    app.use("/messages", messageRoutes);
+    app.use("/messages", message_routes);
+    app.use("/users", user_routes);
 
     app.use((req, res) => {
       res.status(404).send("404 err\n");
@@ -44,4 +47,8 @@ async function initiateServer() {
   }
 }
 
-module.exports = { initiateServer };
+async function beginSchedules() {
+  scheduler.runSchedule();
+}
+
+module.exports = { initiateServer, beginSchedules };

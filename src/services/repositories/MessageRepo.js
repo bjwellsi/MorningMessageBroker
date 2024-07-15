@@ -5,7 +5,7 @@ const MongoObjectID = require("mongodb").ObjectId;
 async function getCollection() {
   var url = "mongodb://localhost:27017/morning_message_broker";
   let client = await MongoClient.connect(url);
-  return client.db().collection("messages");
+  return client.db().collection("Messages");
 }
 
 async function getConnection() {
@@ -44,7 +44,7 @@ async function getMessageTypes() {
 }
 
 async function getMessagesByType(type) {
-  //returns first message of a given type
+  //returns all messages of a given type
   var query = { type: type };
   let collection = await getCollection();
   return await collection.find(query).toArray();
@@ -65,17 +65,6 @@ async function getMessageByID(id) {
 }
 
 async function insertMessage(message) {
-  //basically validate the json
-  //obviously not a pretty way to do it
-  if (typeof message.destination != "string" || message.destination === "")
-    throw new Error("Invalid Destination");
-
-  if (typeof message.subject != "string" || message.subject === "")
-    throw new Error("Invalid Subject");
-
-  if (typeof message.data != "string" || message.data === "")
-    throw new Error("Invalid Data");
-
   let collection = await getCollection();
   return await collection.insertOne(message);
 }

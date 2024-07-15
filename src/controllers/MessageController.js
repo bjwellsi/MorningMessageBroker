@@ -91,6 +91,18 @@ async function getMessages(req, res) {
 
 async function insertMessage(req, res) {
   try {
+    //basically validate the json
+    //obviously not a pretty way to do it
+    //need to do more to verify, like check that you're not also getting info you don't want
+    if (typeof message.owner_id != "string" || message.owner === "")
+      throw new Error("Invalid Owner");
+
+    if (typeof message.subject != "string" || message.subject === "")
+      throw new Error("Invalid Subject");
+
+    if (typeof message.data != "string" || message.data === "")
+      throw new Error("Invalid Data");
+
     let messageData = await msg_repo.insertMessage(req.body);
     res.status(200).send(messageData + "\n");
   } catch (err) {
